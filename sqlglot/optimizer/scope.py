@@ -272,6 +272,19 @@ class Scope:
                 ):
                     self._columns.append(column)
 
+            for expression in self.expression.selects:
+                table = expression.args.get("table")
+                db = str(expression.args.get("db"))
+
+                if table not in self.sources and db in self.sources and expression.is_star:
+                    col = (
+                        expression
+                        if isinstance(expression, exp.Column)
+                        else expression.find(exp.Column)
+                    )
+                    new_col = exp.column(col=col.table, table=col.db)
+                    self._columns.append(new_col)
+
         return self._columns
 
     @property
